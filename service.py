@@ -18,6 +18,16 @@ PHONE_NUMBER_ID = os.getenv("PHONE_NUMBER_ID")
 WHATSAPP_API_URL = os.getenv("WHATSAPP_API_URL")
 
 def text_to_speech(text: str, output_path: str = "reply.mp3") -> str:
+    """
+    Synthesizes a given text into an audio file using Groq's TTS service.
+
+    Args:
+        text (str): The text to be synthesized.
+        output_path (str): The path where the output audio file will be saved. Defaults to "reply.mp3".
+
+    Returns:
+        str: The path to the output audio file, or None if the synthesis failed.
+    """
     try:
         client = Groq(api_key=GROQ_API_KEY)
         response = client.audio.speech.create(
@@ -34,6 +44,7 @@ def text_to_speech(text: str, output_path: str = "reply.mp3") -> str:
     except Exception as e:
         print(f"TTS failed: {e}")
         return None
+
 
 def speech_to_text(input_path: str) -> str:
     """
@@ -63,6 +74,16 @@ def speech_to_text(input_path: str) -> str:
 
 
 def get_llm_response(text_input: str, image_input : str = None) -> str:
+    """
+    Get the response from the Together AI LLM given a text input and an optional image input.
+
+    Args:
+        text_input (str): The text to be sent to the LLM.
+        image_input (str, optional): The base64 encoded image to be sent to the LLM. Defaults to None.
+
+    Returns:
+        str: The response from the LLM.
+    """
     messages = []
     # print(bool(image_input))
     if image_input:
@@ -97,6 +118,15 @@ def get_llm_response(text_input: str, image_input : str = None) -> str:
 
 
 async def fetch_media(media_id: str) -> str:
+    """
+    Fetches the URL of a media given its ID.
+
+    Args:
+        media_id (str): The ID of the media to fetch.
+
+    Returns:
+        str: The URL of the media.
+    """
     url = "https://graph.facebook.com/v22.0/{media_id}"
     async with httpx.AsyncClient() as client:
         try:
@@ -112,7 +142,17 @@ async def fetch_media(media_id: str) -> str:
             print(f"Exception during media fetch: {e}")
     return None
 
-async def handle_image_message(media_id: str):
+async def handle_image_message(media_id: str) -> str:
+    """
+    Handle an image message by fetching the image media, converting it to base64,
+    and returning the base64 string.
+
+    Args:
+        media_id (str): The ID of the image media to fetch.
+
+    Returns:
+        str: The base64 string of the image.
+    """
     media_url = await fetch_media(media_id)
     # print(media_url)
     async with httpx.AsyncClient() as client:
@@ -154,6 +194,19 @@ async def handle_audio_message(media_id: str):
         return speech_to_text(temp_audio_path)
 
 async def send_audio_message(to: str, file_path: str):
+    """
+    Send an audio message to a WhatsApp user.
+
+    Args:
+        to (str): The phone number of the recipient.
+        file_path (str): The path to the audio file to be sent.
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     url = f"https://graph.facebook.com/v20.0/{PHONE_NUMBER_ID}/media"
     with open(file_path, "rb") as f:
         files = { "file": ("reply.mp3", open(file_path, "rb"), "audio/mpeg")}
