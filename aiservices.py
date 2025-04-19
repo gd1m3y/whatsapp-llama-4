@@ -35,11 +35,14 @@ async def api_llm_response(req: LLMRequest):
     if req.kind == KindEnum.image:
         image_base64 = await handle_image_message(req.media_id)
         result = get_llm_response(text_message, image_input=image_base64)
+        # print(result)
     elif req.kind == KindEnum.audio:
         text_message = await handle_audio_message(req.media_id)
         result = get_llm_response(text_message)
         audio_path = text_to_speech(text=result, output_path="reply.mp3")
         return FileResponse(audio_path, media_type="audio/mpeg", filename="reply.mp3")
+    else:
+        result = get_llm_response(text_message)
     
     if result is None:
         return LLMResponse(response=None, error="LLM response generation failed.")
